@@ -1,8 +1,8 @@
 # -- File that computes important values such as Delta, Gamma, Vega, Theta, and Rho
 
 # Import 
-import numpy as np
-from scipy.stats import norm 
+import numpy as np 
+from scipy.stats import norm  
 
 from src.black_scholes import d1, d2
 
