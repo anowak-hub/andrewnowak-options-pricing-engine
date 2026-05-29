@@ -24,12 +24,15 @@ def implied_volatility_call(market_price, S, K, T, r, sigma=0.2, tolerance=1e-5,
         model_price = call_price(S, K, T, r, sigma)
         vega_value = vega(S, K, T, r, sigma)
 
+        if abs(vega_value) < 1e-10:
+            return None
+        
         error = model_price - market_price
 
         if abs(error) < tolerance:
             return sigma
 
-        sigma = error - error / vega_value
+        sigma = sigma - error / vega_value
     
     return sigma
 
@@ -38,11 +41,14 @@ def implied_volatility_put(market_price, S, K, T, r, sigma=0.2, tolerance=1e-5, 
         model_price = put_price(S, K, T, r, sigma)
         vega_value = vega(S, K, T, r, sigma)
 
+        if abs(vega_value) < 1e-10:
+            return None
+        
         error = model_price - market_price
 
         if abs(error) < tolerance:
             return sigma
 
-        sigma = error - error / vega_value
+        sigma = sigma - error / vega_value
     
     return sigma
