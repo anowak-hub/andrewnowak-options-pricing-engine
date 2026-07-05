@@ -7,18 +7,9 @@ from scipy.stats import norm
 # Simulate the Stock Path 
 def simulate_stock_path(S, T, r, sigma, steps):
     dt = T / steps
-    prices = [S]
-
-    for i in range(steps):
-        Z = np.random.normal()
-
-        next_price = prices[-1] * np.exp(
-            (r - 0.5*sigma**2)*dt
-            + (sigma*np.sqrt(dt)*Z)
-            )
-        
-        prices.append(next_price)
-
+    Z = np.random.normal(0, 1, steps)
+    increments = np.exp((r - 0.5 * sigma**2) * dt + sigma * np.sqrt(dt) * Z)
+    prices = np.concatenate([[S], S * np.cumprod(increments)])
     return prices
 
 # Simulate Multiple Stock Paths

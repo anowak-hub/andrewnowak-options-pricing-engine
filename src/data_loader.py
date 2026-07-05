@@ -18,8 +18,8 @@ save_data(df, "SPY_prices.csv")
 
 # Download options chain data for a specified expiration date
 spy = yf.Ticker("SPY")
+expiration = spy.options[4]
 
-expiration = "2026-06-05"
 options_chain = spy.option_chain(expiration)
 calls = options_chain.calls
 save_data(calls, "SPY_calls_expiration_2026-06-05.csv")
