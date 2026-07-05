@@ -13,18 +13,23 @@ A quantitative finance project that prices SPY options using Black-Scholes, comp
 │   ├── volatility.py         # Historical volatility + IV solver (Newton-Raphson)
 │   ├── monte_carlo.py        # GBM simulation + Monte Carlo option pricing
 │   └── data_loader.py        # yfinance data download utilities
-├── notebooks/
-│   ├── black_scholes_pricing.ipynb   # Black-Scholes vs market price comparison
-│   ├── greeks_visualization.ipynb    # Delta vs stock price plot
-│   ├── implied_volatility.ipynb      # IV smile/curve from live SPY options chain
-│   ├── monte_carlo_single.ipynb      # Single simulated GBM path
-│   ├── monte_carlo_multi.ipynb       # 100 simulated paths
-│   ├── monte_carlo_convergence.ipynb # MC vs BS convergence by simulation count
-│   └── historical_volatility.ipynb   # Rolling vol, return distribution, SPY prices
+├── scripts/
+│   ├── black_scholes_pricing.py   # BS vs market price comparison
+│   ├── greeks_visualization.py    # Delta, Gamma, Theta, Vega plots
+│   ├── implied_volatility.py      # IV smile/curve from live SPY options chain
+│   ├── historical_volatility.py   # Rolling vol, return distribution, SPY prices
+│   └── monte_carlo.py             # Single path, multiple paths, BS convergence
+├── tests/
+│   ├── test_black_scholes.py
+│   ├── test_greeks.py
+│   ├── test_monte_carlo.py
+│   └── test_volatility.py
+├── outputs/                       # Generated plots (auto-saved on script run)
 ├── data/
 │   ├── SPY_prices.csv
-│   ├── SPY_calls_expiration_2026-06-05.csv
-│   └── SPY_puts_expiration_2026-06-05.csv
+│   ├── SPY_calls.csv
+│   └── SPY_puts.csv
+├── requirements.txt
 └── README.md
 ```
 
@@ -71,7 +76,7 @@ Where $f(\sigma) = \text{BS\_Price}(\sigma) - \text{Market\_Price}$.
 
 Converges when $|f(\sigma)| < 10^{-5}$, with a guard against near-zero vega (deep ITM/OTM options) that would cause division instability.
 
-**Note on data quality:** Live bid/ask data from yfinance can be stale or corrupt for certain strikes. The IV notebook uses yfinance's pre-computed `impliedVolatility` field for the smile plot, while the Newton-Raphson solver is validated against synthetic clean prices.
+**Note on data quality:** Live bid/ask data from yfinance can be stale or corrupt for certain strikes. The IV script uses yfinance's pre-computed `impliedVolatility` field for the smile plot, while the Newton-Raphson solver is validated against synthetic clean prices.
 
 ---
 
@@ -81,7 +86,7 @@ Computed from realized log returns, annualized to 252 trading days:
 
 $$\sigma_{hist} = \text{std}\left(\ln\frac{P_t}{P_{t-1}}\right) \times \sqrt{252}$$
 
-The historical volatility notebook also plots a **21-day rolling volatility** window, showing how realized vol evolved across the 2020–2025 period (including the COVID spike and 2022 rate-hike volatility regime).
+The historical volatility script plots a **21-day rolling volatility** window, showing how realized vol evolved across the 2020–2025 period (including the COVID crash and 2022 rate-hike volatility regime).
 
 ---
 
@@ -95,21 +100,21 @@ Option prices are estimated by averaging discounted payoffs across simulations:
 
 $$C \approx e^{-rT} \cdot \frac{1}{N}\sum_{i=1}^{N} \max(S_T^{(i)} - K, 0)$$
 
-The convergence notebook shows MC estimates vs the Black-Scholes closed-form price across simulation counts from 10 to 10,000, demonstrating that MC converges to BS as $N \to \infty$.
+The convergence script shows MC estimates vs the Black-Scholes closed-form price across simulation counts from 10 to 10,000, demonstrating that MC converges to BS as $N \to \infty$.
 
 ---
 
-## Notebooks Overview
+## Scripts Overview
 
-| Notebook | What It Shows |
-|----------|--------------|
-| `black_scholes_pricing` | Compares BS theoretical price to SPY market price for a real options contract |
-| `greeks_visualization` | Plots call Delta as a function of stock price, illustrating nonlinear sensitivity |
-| `implied_volatility` | Generates the IV smile/curve from the live SPY options chain |
-| `historical_volatility` | SPY price history, log return distribution, and 21-day rolling volatility |
-| `monte_carlo_single` | One simulated GBM path over 252 steps |
-| `monte_carlo_multi` | 100 simultaneous GBM paths, showing dispersion of outcomes |
-| `monte_carlo_convergence` | MC price convergence toward Black-Scholes as simulation count increases |
+| Script | What It Produces |
+|--------|-----------------|
+| `black_scholes_pricing.py` | Compares BS theoretical price to live SPY market price |
+| `greeks_visualization.py` | 2x2 plot of Delta, Gamma, Theta, Vega vs stock price |
+| `implied_volatility.py` | IV smile curve for calls and puts from live options chain |
+| `historical_volatility.py` | SPY price history, log return distribution, 21-day rolling vol |
+| `monte_carlo.py` | Single GBM path, 100 simulated paths, MC vs BS convergence |
+
+All plots are saved automatically to the `outputs/` folder.
 
 ---
 
@@ -118,21 +123,36 @@ The convergence notebook shows MC estimates vs the Black-Scholes closed-form pri
 **Requirements:** Python 3.9+
 
 ```bash
-pip install numpy scipy pandas matplotlib yfinance
+pip install -r requirements.txt
 ```
 
-**Run any notebook:**
+**Refresh market data:**
 ```bash
-jupyter notebook notebooks/implied_volatility.ipynb
+python src/data_loader.py
+```
+
+**Run any script:**
+```bash
+python scripts/greeks_visualization.py
+python scripts/historical_volatility.py
+python scripts/monte_carlo.py
+python scripts/implied_volatility.py
+python scripts/black_scholes_pricing.py
+```
+
+**Run tests:**
+```bash
+pytest tests/
 ```
 
 ---
 
 ## Key Results
 
+- **Black-Scholes vs market price difference of $0.22 on calls and $0.04 on puts** for ATM SPY options, validating the implementation against live market data
 - **Monte Carlo converges to Black-Scholes** within ~1% by 5,000 simulations, validating the GBM implementation
 - **IV smile is visible** across SPY strikes, with higher implied volatility on OTM puts (volatility skew), consistent with the market's demand for downside protection
-- **21-day rolling volatility** shows clear volatility clustering: the COVID crash (March 2020), and the 2022 Fed tightening cycle both produced sustained elevated volatility regimes
+- **21-day rolling volatility** shows clear volatility clustering: the COVID crash (March 2020) and the 2022 Fed tightening cycle both produced sustained elevated volatility regimes
 
 ---
 
