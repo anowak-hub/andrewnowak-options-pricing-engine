@@ -22,7 +22,9 @@ expiration = spy.options[4]
 
 options_chain = spy.option_chain(expiration)
 calls = options_chain.calls
-save_data(calls, "SPY_calls_expiration_2026-06-05.csv")
+calls["expiration"] = expiration
+save_data(calls, "SPY_calls.csv")
 
 puts = options_chain.puts
-save_data(puts, "SPY_puts_expiration_2026-06-05.csv")
+puts["expiration"]  = expiration
+save_data(puts, "SPY_puts.csv")
